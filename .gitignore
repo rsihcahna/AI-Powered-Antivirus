@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+*.pkl
+env/
+venv/
+uploads/
+
+# Node/Vite
+node_modules/
+dist/
+.vite/
+
+# System
+.DS_Store
+*.log
