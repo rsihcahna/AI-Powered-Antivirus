@@ -1,20 +1,25 @@
-# scheduler.py
-import time
-import threading
-from ai_model.predict import run_ai_scan
-from rust_engine.scanner import run_rust_scan
-from go_model.network_monitor import run_network_monitor
+# /backend/scheduler.py
 
-def scheduled_task():
+import threading
+import time
+from logger import log_event
+
+def background_task():
+    """
+    This function runs in the background for periodic operations.
+    You can customize it to perform scheduled directory scans,
+    periodic log cleanups, or health checks.
+    """
     while True:
-        print("[Scheduler] Running scheduled scans...")
-        run_ai_scan()
-        run_rust_scan()
-        run_network_monitor()
-        print("[Scheduler] Waiting for the next cycle...\n")
-        time.sleep(3600)  # Run every hour
+        log_event("Scheduler heartbeat", "Background task is alive.")
+        # You can plug in any periodic functionality here
+        time.sleep(3600)  # Run every 1 hour
 
 def start_scheduler():
-    thread = threading.Thread(target=scheduled_task)
+    """
+    Starts the background scheduler in a separate daemon thread.
+    """
+    thread = threading.Thread(target=background_task)
     thread.daemon = True
     thread.start()
+    log_event("Scheduler", "Background task started.")

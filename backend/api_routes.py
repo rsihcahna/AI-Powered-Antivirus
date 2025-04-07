@@ -1,27 +1,60 @@
+# /backend/api_routes.py
+
 from flask import Blueprint, request, jsonify
-from predict import predict_file
-from logger import log_threat
-from threat_analysis import analyze_threat
-from database import save_to_db
+from werkzeug.utils import secure_filename
+import os
+import tempfile
 
-api = Blueprint('api', __name__)
+from ai_model.predict import predict_malware
+from database import insert_threat, insert_log, get_all_threats, get_all_logs
+from alert_system import trigger_alert
 
-@api.route('/scan', methods=['POST'])
+api = Blueprint("api", __name__)
+
+@api.route('/api/scan', methods=['POST'])
 def scan_file():
-    uploaded_file = request.files.get('file')
-    if not uploaded_file:
-        return jsonify({'error': 'No file uploaded'}), 400
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part in the request"}), 400
 
-    file_path = f"/tmp/{uploaded_file.filename}"
-    uploaded_file.save(file_path)
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
 
-    prediction = predict_file(file_path)
-    analysis = analyze_threat(file_path)
-    log_threat(file_path, prediction)
-    save_to_db(file_path, prediction, analysis)
+    filename = secure_filename(file.filename)
+
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        file.save(temp_file.name)
+        result = predict_malware(temp_file.name)
+
+    # Log result
+    threat_data = {
+        "filename": filename,
+        "result": result,
+        "status": result.get("label", "error")
+    }
+
+    insert_threat(threat_data)
+    insert_log({
+        "event": "File Scanned",
+        "filename": filename,
+        "result": result
+    })
+
+    if result.get("label") == "malware":
+        trigger_alert(filename)
 
     return jsonify({
-        'file': uploaded_file.filename,
-        'prediction': prediction,
-        'analysis': analysis
+        "filename": filename,
+        "prediction": result.get("label"),
+        "confidence": result.get("confidence", "N/A")
     })
+
+@api.route('/api/logs', methods=['GET'])
+def get_logs():
+    logs = get_all_logs()
+    return jsonify(logs)
+
+@api.route('/api/threats', methods=['GET'])
+def get_threats():
+    threats = get_all_threats()
+    return jsonify(threats)

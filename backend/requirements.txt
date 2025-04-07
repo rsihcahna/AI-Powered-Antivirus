@@ -9,3 +9,5 @@ psutil
 pickle5
 requests
 schedule
+clamd
+python-dotenv

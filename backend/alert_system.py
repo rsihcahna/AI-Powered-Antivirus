@@ -1,12 +1,24 @@
-# alert_system.py
-from logger import log_event
+# /backend/alert_system.py
 
-def send_alert(threat_type: str, location: str, severity: str):
-    alert_message = (
-        f"[ALERT] Threat Detected!\n"
-        f"Type: {threat_type}\n"
-        f"Location: {location}\n"
-        f"Severity: {severity}\n"
-    )
-    print(alert_message)
-    log_event(f"ALERT: {alert_message}")
+import datetime
+from logger import log_event
+from database import store_threat, using_json_storage
+
+def trigger_alert(filename, confidence, label="malware"):
+    """
+    Triggers an alert when a malicious file is detected.
+    Stores the alert in the database (MongoDB or JSON based on availability).
+    """
+    alert = {
+        "filename": filename,
+        "label": label,
+        "confidence": confidence,
+        "timestamp": datetime.datetime.now().isoformat(),
+        "source": "AI Engine"
+    }
+
+    try:
+        store_threat(alert)
+        log_event("Threat detected and stored", alert)
+    except Exception as e:
+        log_event("Failed to trigger alert", {"error": str(e), "alert": alert})
