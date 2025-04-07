@@ -11,3 +11,4 @@ requests
 schedule
 clamd
 python-dotenv
+gunicorn
