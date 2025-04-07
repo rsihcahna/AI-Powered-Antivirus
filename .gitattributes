@@ -1,0 +1,2 @@
+database/malware_signatures/full.csv filter=lfs diff=lfs merge=lfs -text
+database/malware_signatures/SOMLAP[[:space:]]DATASET.csv filter=lfs diff=lfs merge=lfs -text
