@@ -2,7 +2,7 @@
 
 import datetime
 from logger import log_event
-from database import store_threat, using_json_storage
+from database import insert_threat, using_json_storage
 
 def trigger_alert(filename, confidence, label="malware"):
     """
