@@ -36,6 +36,9 @@ except errors.ServerSelectionTimeoutError as e:
     mongodb_connected = False
     log_event("MongoDB connection failed", {"error": str(e)})
 
+# ✅ Expose fallback flag to other modules
+using_json_storage = not mongodb_connected
+
 # Insert log (MongoDB or fallback)
 def insert_log(log_data):
     if mongodb_connected:

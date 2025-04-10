@@ -4,7 +4,7 @@
 from flask import Blueprint, request, jsonify
 from ai_model.predict import predict_malware
 from utils import extract_features
-from database import store_threat, store_log, using_json_storage
+from database import insert_threat, insert_log, using_json_storage
 from alert_system import trigger_alert
 import os
 import datetime

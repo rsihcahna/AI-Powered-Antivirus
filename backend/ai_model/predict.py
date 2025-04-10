@@ -1,4 +1,4 @@
-# 📄 backend/ai_model/predict.py
+# 📄 predict.py
 # 🔍 ML-based malware threat predictor
 
 import os
@@ -6,14 +6,17 @@ import json
 import joblib
 import numpy as np
 
-MODEL_PATH = "backend/ai_model/backend/malware_model.pkl"
+# Dynamically resolve absolute path to the model
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(BASE_DIR, "backend", "malware_model.pkl")
 
-# ✅ Load the model once globally
-try:
+# ✅ Load the model once
+if os.path.exists(MODEL_PATH):
     model = joblib.load(MODEL_PATH)
-except FileNotFoundError:
+else:
     print(f"❌ Model not found at {MODEL_PATH}")
     model = None
+
 
 def extract_features(file_path):
     """

@@ -1,7 +1,7 @@
 # 📄 backend/alert_system.py
 # 🚨 Handles threat alerts
 
-from database import store_threat, using_json_storage
+from database import insert_threat, using_json_storage
 from logger import log_event
 import datetime
 
