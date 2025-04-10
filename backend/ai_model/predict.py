@@ -1,4 +1,4 @@
-# 📄 predict.py
+# 📄 backend/ai_model/predict.py
 # 🔍 ML-based malware threat predictor
 
 import os
@@ -6,28 +6,27 @@ import json
 import joblib
 import numpy as np
 
-# Updated model path
 MODEL_PATH = "backend/ai_model/backend/malware_model.pkl"
 
-# ✅ Load the model once
+# ✅ Load the model once globally
 try:
     model = joblib.load(MODEL_PATH)
 except FileNotFoundError:
-    print(f"Model not found at {MODEL_PATH}")
+    print(f"❌ Model not found at {MODEL_PATH}")
     model = None
 
 def extract_features(file_path):
     """
     Placeholder for actual feature extraction logic.
-    For now, returns dummy numerical features.
+    Currently uses dummy feature based on file size.
     """
     try:
         with open(file_path, 'rb') as f:
             content = f.read()
-            size = len(content) % 100  # Simplified dummy logic
+            size = len(content) % 100  # Dummy numerical feature
         return [size]
     except Exception as e:
-        print(f"Feature extraction failed: {e}")
+        print(f"❌ Feature extraction failed: {e}")
         return []
 
 def predict_malware(file_path):
@@ -35,10 +34,12 @@ def predict_malware(file_path):
     Predicts whether a file is malware or benign using the trained ML model.
     Returns a dictionary with the label and probability.
     """
-    features = extract_features(file_path)
+    if not model:
+        return {"error": "Model not loaded."}
 
-    if not features or model is None:
-        return {"error": "Feature extraction or model loading failed."}
+    features = extract_features(file_path)
+    if not features:
+        return {"error": "Failed to extract features."}
 
     try:
         prediction = model.predict([features])[0]
@@ -48,9 +49,9 @@ def predict_malware(file_path):
     except Exception as e:
         return {"error": str(e)}
 
+# CLI Test Mode
 if __name__ == "__main__":
     import sys
-
     if len(sys.argv) < 2:
         print("Usage: python predict.py <file_path>")
         exit(1)

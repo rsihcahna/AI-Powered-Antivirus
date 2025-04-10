@@ -1,26 +1,44 @@
-# /backend/threat_analysis.py
+# 📄 backend/threat_analysis.py
+# 📊 Provides basic analytics on detected threats
 
-from ai_model.predict import predict_threat
-from utils import load_file_content
-from logger import log_event
+from database import get_all_threats
+from collections import Counter
+import datetime
 
-def analyze_file(file_path):
-    try:
-        # Load the file content
-        content = load_file_content(file_path)
-        
-        # Run prediction
-        is_threat, confidence = predict_threat(content)
-
-        # Log result
-        result = {
-            "file": file_path,
-            "threat_detected": is_threat,
-            "confidence": confidence
+def analyze_threats():
+    """
+    Analyzes all logged threats and returns summary statistics.
+    """
+    threats = get_all_threats()
+    if not threats:
+        return {
+            "total_threats": 0,
+            "by_filename": {},
+            "by_day": {}
         }
-        log_event("Threat Analysis Result", result)
-        
-        return result
-    except Exception as e:
-        log_event("Error", {"error": str(e), "file": file_path})
-        return {"error": str(e), "file": file_path}
+
+    # Count threats by filename
+    filename_counts = Counter([t.get("filename", "unknown") for t in threats])
+
+    # Count threats by day
+    day_counts = Counter()
+    for t in threats:
+        timestamp = t.get("timestamp")
+        if timestamp:
+            try:
+                dt = datetime.datetime.fromisoformat(timestamp)
+                day = dt.date().isoformat()
+                day_counts[day] += 1
+            except Exception:
+                pass
+
+    return {
+        "total_threats": len(threats),
+        "by_filename": dict(filename_counts),
+        "by_day": dict(day_counts)
+    }
+
+if __name__ == "__main__":
+    # For testing directly
+    summary = analyze_threats()
+    print(summary)

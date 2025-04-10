@@ -1,29 +1,31 @@
-# /backend/logger.py
+# 📄 backend/logger.py
+# 📘 Logging utility for events
 
 import os
+import datetime
 import json
-from datetime import datetime
 
-LOG_FILE_PATH = "backend/data/system_logs.json"
+LOG_DIR = "backend/logs"
+os.makedirs(LOG_DIR, exist_ok=True)
 
-# Ensure the logs directory and file exist
-os.makedirs(os.path.dirname(LOG_FILE_PATH), exist_ok=True)
-if not os.path.exists(LOG_FILE_PATH):
-    with open(LOG_FILE_PATH, "w") as f:
-        f.write("")
+LOG_FILE = os.path.join(LOG_DIR, "events.log")
 
-def log_event(event, details=None):
+def log_event(event_type, data=None):
     """
-    Logs events with a timestamp to a JSON lines file.
+    Logs an event with a timestamp, type, and optional data.
     """
     log_entry = {
-        "timestamp": datetime.utcnow().isoformat() + "Z",
-        "event": event,
-        "details": details or {}
+        "timestamp": datetime.datetime.now().isoformat(),
+        "event_type": event_type,
+        "data": data
     }
 
     try:
-        with open(LOG_FILE_PATH, "a") as f:
+        with open(LOG_FILE, "a") as f:
             f.write(json.dumps(log_entry) + "\n")
     except Exception as e:
-        print(f"Failed to write log: {e}")
+        print(f"[Logger Error] Failed to write log: {e}")
+
+if __name__ == "__main__":
+    # Test logging
+    log_event("test_log", {"example": "test"})

@@ -1,60 +1,60 @@
-# /backend/api_routes.py
+# 📄 backend/api_routes.py
+# 🌐 Flask API Routes for AI-Powered Antivirus
 
 from flask import Blueprint, request, jsonify
-from werkzeug.utils import secure_filename
-import os
-import tempfile
-
 from ai_model.predict import predict_malware
-from database import insert_threat, insert_log, get_all_threats, get_all_logs
+from utils import extract_features
+from database import store_threat, store_log, using_json_storage
 from alert_system import trigger_alert
+import os
+import datetime
 
 api = Blueprint("api", __name__)
 
-@api.route('/api/scan', methods=['POST'])
+UPLOAD_FOLDER = "backend/uploads"
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+@api.route('/scan', methods=['POST'])
 def scan_file():
     if 'file' not in request.files:
-        return jsonify({"error": "No file part in the request"}), 400
+        return jsonify({"error": "No file part in request"}), 400
 
     file = request.files['file']
     if file.filename == '':
         return jsonify({"error": "No selected file"}), 400
 
-    filename = secure_filename(file.filename)
+    file_path = os.path.join(UPLOAD_FOLDER, file.filename)
+    file.save(file_path)
 
-    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-        file.save(temp_file.name)
-        result = predict_malware(temp_file.name)
+    result = predict_malware(file_path)
 
-    # Log result
-    threat_data = {
-        "filename": filename,
-        "result": result,
-        "status": result.get("label", "error")
+    log_data = {
+        "filename": file.filename,
+        "timestamp": datetime.datetime.now().isoformat(),
+        "prediction": result.get("label", "error"),
+        "confidence": result.get("confidence", 0)
     }
 
-    insert_threat(threat_data)
-    insert_log({
-        "event": "File Scanned",
-        "filename": filename,
-        "result": result
-    })
+    store_log(log_data)
 
     if result.get("label") == "malware":
-        trigger_alert(filename)
+        store_threat(log_data)
+        trigger_alert(file.filename)
 
     return jsonify({
-        "filename": filename,
-        "prediction": result.get("label"),
-        "confidence": result.get("confidence", "N/A")
+        "filename": file.filename,
+        "result": result,
+        "storage": "JSON" if using_json_storage() else "MongoDB"
     })
 
-@api.route('/api/logs', methods=['GET'])
+@api.route('/logs', methods=['GET'])
 def get_logs():
+    from database import get_all_logs
     logs = get_all_logs()
     return jsonify(logs)
 
-@api.route('/api/threats', methods=['GET'])
+@api.route('/threats', methods=['GET'])
 def get_threats():
+    from database import get_all_threats
     threats = get_all_threats()
     return jsonify(threats)

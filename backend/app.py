@@ -1,16 +1,15 @@
-# /backend/app.py
+# 📄 backend/app.py
+# 🚀 Flask Entry Point for AI-Powered Antivirus
 
 from flask import Flask
 from api_routes import api
-from logger import log_event
 
 app = Flask(__name__)
-app.register_blueprint(api)
+app.register_blueprint(api, url_prefix='/api')
 
 @app.route('/')
 def index():
-    log_event("Home route accessed")
-    return "✅ AI-Powered Antivirus Backend (Flask) is Running!"
+    return "🛡️ AI-Powered Antivirus Backend is Running with Flask!"
 
 if __name__ == '__main__':
     app.run(debug=True)
