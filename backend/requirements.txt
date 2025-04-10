@@ -6,7 +6,6 @@ pandas
 joblib
 pymongo
 psutil
-pickle5
 requests
 schedule
 clamd
