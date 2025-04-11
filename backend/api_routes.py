@@ -44,7 +44,7 @@ def scan_file():
     return jsonify({
         "filename": file.filename,
         "result": result,
-        "storage": "JSON" if using_json_storage() else "MongoDB"
+        "storage": "JSON" if using_json_storage else "MongoDB"
     })
 
 @api.route('/logs', methods=['GET'])
